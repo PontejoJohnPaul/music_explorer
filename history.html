@@ -3,28 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <title>Recent History</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="history.css">
 </head>
 <body>
-  <h1>Recent Search History</h1>
-  <ul id="historyList"></ul>
+  <div class="container">
+    <h1>Recent Search History</h1>
+    <ul id="historyList"></ul>
 
-  <div id="player"></div>
+    <div id="player"></div>
+
+    <!-- Back button -->
+    <button class="back-btn" onclick="window.history.back()">← Back</button>
+  </div>
 
   <script>
+    // Get search history from localStorage
     const history = JSON.parse(localStorage.getItem("history")) || [];
     const list = document.getElementById("historyList");
+
+    // Show each search term in the list
     history.forEach(item => {
       const li = document.createElement("li");
       li.textContent = item;
       list.appendChild(li);
     });
 
+    // Get the last played track ID
     const currentTrack = localStorage.getItem("currentTrack");
     if (currentTrack) {
       document.getElementById("player").innerHTML = `
         <iframe src="https://open.spotify.com/embed/track/${currentTrack}" 
-          width="300" height="80" frameborder="0" allow="encrypted-media"></iframe>`;
+          width="300" height="80" allow="encrypted-media"></iframe>`;
     }
   </script>
 </body>

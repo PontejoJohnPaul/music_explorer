@@ -1,0 +1,56 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #121212; /* Spotify dark background */
+  color: #fff;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  max-width: 600px;
+  margin: 0 auto; 
+  padding: 20px;
+  text-align: center;
+}
+
+h1 {
+  font-size: 1.8em;
+  margin-bottom: 20px;
+  color: #1DB954; 
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+li {
+  background-color: #181818;
+  margin: 8px 0;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+#player {
+  margin-top: 20px;
+}
+
+iframe {
+  border: none;
+  border-radius: 8px;
+}
+
+.back-btn {
+  margin-top: 25px;
+  padding: 10px 20px;
+  background-color: #1DB954;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 1em;
+  cursor: pointer;
+}
+
+.back-btn:hover {
+  background-color: #1aa34a;
+}
