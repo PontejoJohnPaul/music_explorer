@@ -1,0 +1,53 @@
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background: #121212;
+  color: #fff;
+  margin: 0;
+  padding: 20px;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+h1 {
+  color: #1DB954;
+}
+
+button {
+  padding: 8px 15px;
+  background: #1DB954;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #1ed760;
+}
+
+.track {
+  background: #282828;
+  margin: 10px auto;
+  padding: 15px;
+  border-radius: 8px;
+  width: 320px;
+}
+
+.track img {
+  width: 100%;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+#player {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background: #282828;
+  padding: 10px;
+}
