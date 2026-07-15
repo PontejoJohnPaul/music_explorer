@@ -1,0 +1,29 @@
+/* Header container */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* center ang title */
+  position: relative;      /* para ma-place ang back button sa kaliwa */
+  margin-bottom: 20px;
+}
+
+/* Back button styling */
+#backBtn {
+  position: absolute;
+  left: 15px;
+  padding: 8px 14px;
+  background-color: green;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+#backBtn:hover {
+  background-color: darkgreen;
+}
+
+/* Centered title */
+.header h1 {
+  margin: 0;
+}
