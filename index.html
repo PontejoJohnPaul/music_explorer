@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Music Explorer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>🎶 Music Explorer</h1>
+    <nav>
+      <a href="history.html"><button>Recent History</button></a>
+      <a href="playlist.html"><button>My Playlist</button></a>
+    </nav>
+  </header>
+
+  <input type="text" id="search" placeholder="Enter song or artist">
+  <button id="searchBtn">Search</button>
+  <p id="error"></p>
+
+  <div id="results"></div>
+  <div id="lyrics"></div>
+
+  <!-- Persistent Player -->
+  <div id="player"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>

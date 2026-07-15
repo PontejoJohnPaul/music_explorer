@@ -1,0 +1,118 @@
+const clientId = "e171a509869a4302ae809bfd115eaf51";
+const clientSecret = "7a631abba6eb49cfa74a13596287d5e6";
+
+let accessToken = "";
+
+// Get Spotify Token
+async function getToken() {
+  const result = await fetch("https://accounts.spotify.com/api/token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "Authorization": "Basic " + btoa(clientId + ":" + clientSecret)
+    },
+    body: "grant_type=client_credentials"
+  });
+
+  const data = await result.json();
+  accessToken = data.access_token;
+}
+
+// Search Track
+async function searchTrack(query) {
+  try {
+    const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=5`, {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+
+    if (!response.ok) throw new Error("Failed to fetch tracks");
+
+    const data = await response.json();
+    displayTracks(data.tracks.items);
+    saveHistory(query);
+  } catch (error) {
+    console.error(error);
+    document.getElementById("error").textContent = "Error fetching tracks!";
+  }
+}
+
+// Display Tracks
+function displayTracks(tracks) {
+  const container = document.getElementById("results");
+  container.innerHTML = "";
+
+  tracks.forEach(track => {
+    const div = document.createElement("div");
+    div.className = "track";
+    div.innerHTML = `
+      <h3>${track.name} - ${track.artists[0].name}</h3>
+      <img src="${track.album.images[0].url}" alt="Album Art" 
+           onclick="playTrack('${track.id}','${track.name}','${track.artists[0].name}')">
+    `;
+    container.appendChild(div);
+  });
+}
+
+// Play Track + Show Lyrics + Add to Playlist Button
+async function playTrack(trackId, trackName, artistName) {
+  // Save current track to localStorage for persistence
+  localStorage.setItem("currentTrack", trackId);
+
+  const player = `
+    <iframe style="border-radius:12px" 
+      src="https://open.spotify.com/embed/track/${trackId}" 
+      width="300" height="80" frameborder="0" 
+      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+      loading="lazy"></iframe>
+    <button onclick="addToPlaylist('${trackName} - ${artistName}')">Add to Playlist</button>
+  `;
+  document.getElementById("player").innerHTML = player;
+
+  // Fetch lyrics from Lyrics.ovh
+  try {
+    const res = await fetch(`https://api.lyrics.ovh/v1/${artistName}/${trackName}`);
+    const data = await res.json();
+    document.getElementById("lyrics").innerHTML = `<pre>${data.lyrics || "Lyrics not available"}</pre>`;
+  } catch {
+    document.getElementById("lyrics").innerHTML = "<p>Lyrics not available</p>";
+  }
+}
+
+// Save history in localStorage
+function saveHistory(query) {
+  let history = JSON.parse(localStorage.getItem("history")) || [];
+  history.push(query);
+  localStorage.setItem("history", JSON.stringify(history));
+}
+
+// Add to Playlist
+function addToPlaylist(song) {
+  let playlist = JSON.parse(localStorage.getItem("playlist")) || [];
+  playlist.push(song);
+  localStorage.setItem("playlist", JSON.stringify(playlist));
+  alert(`${song} added to playlist!`);
+}
+
+// Search Button
+document.getElementById("searchBtn").addEventListener("click", async () => {
+  const query = document.getElementById("search").value;
+  if (!query) {
+    document.getElementById("error").textContent = "Please enter a search term.";
+    return;
+  }
+  document.getElementById("error").textContent = "";
+  await searchTrack(query);
+});
+
+// Init
+getToken();
+
+// Load persistent track if exists
+window.onload = () => {
+  const currentTrack = localStorage.getItem("currentTrack");
+  if (currentTrack) {
+    document.getElementById("player").innerHTML = `
+      <iframe src="https://open.spotify.com/embed/track/${currentTrack}" 
+        width="300" height="80" frameborder="0" allow="encrypted-media"></iframe>`;
+  }
+};
