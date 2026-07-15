@@ -6,14 +6,14 @@
   <link rel="stylesheet" href="history.css">
 </head>
 <body>
+  <!-- Back button aligned left -->
+  <button class="back-btn" onclick="window.history.back()">← Back</button>
+
   <div class="container">
     <h1>Recent Search History</h1>
     <ul id="historyList"></ul>
 
     <div id="player"></div>
-
-    <!-- Back button -->
-    <button class="back-btn" onclick="window.history.back()">← Back</button>
   </div>
 
   <script>
