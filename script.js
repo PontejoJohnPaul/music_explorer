@@ -5,25 +5,33 @@ let accessToken = "";
 
 // Get Spotify Token
 async function getToken() {
-  const result = await fetch("https://accounts.spotify.com/api/token", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      "Authorization": "Basic " + btoa(clientId + ":" + clientSecret)
-    },
-    body: "grant_type=client_credentials"
-  });
+  try {
+    const result = await fetch("https://accounts.spotify.com/api/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Authorization": "Basic " + btoa(`${clientId}:${clientSecret}`)
+      },
+      body: "grant_type=client_credentials"
+    });
 
-  const data = await result.json();
-  accessToken = data.access_token;
+    if (!result.ok) throw new Error("Failed to get token");
+
+    const data = await result.json();
+    accessToken = data.access_token;
+  } catch (error) {
+    console.error("Token Error:", error);
+    document.getElementById("error").textContent = "Error fetching Spotify token!";
+  }
 }
 
 // Search Track
 async function searchTrack(query) {
   try {
-    const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=5`, {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    });
+    const response = await fetch(
+      `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=5`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
 
     if (!response.ok) throw new Error("Failed to fetch tracks");
 
@@ -31,7 +39,7 @@ async function searchTrack(query) {
     displayTracks(data.tracks.items);
     saveHistory(query);
   } catch (error) {
-    console.error(error);
+    console.error("Search Error:", error);
     document.getElementById("error").textContent = "Error fetching tracks!";
   }
 }
@@ -41,12 +49,17 @@ function displayTracks(tracks) {
   const container = document.getElementById("results");
   container.innerHTML = "";
 
+  if (!tracks.length) {
+    container.innerHTML = "<p>No tracks found.</p>";
+    return;
+  }
+
   tracks.forEach(track => {
     const div = document.createElement("div");
     div.className = "track";
     div.innerHTML = `
       <h3>${track.name} - ${track.artists[0].name}</h3>
-      <img src="${track.album.images[0].url}" alt="Album Art" 
+      <img src="${track.album.images[0]?.url || ''}" alt="Album Art"
            onclick="playTrack('${track.id}','${track.name}','${track.artists[0].name}')">
     `;
     container.appendChild(div);
@@ -55,24 +68,23 @@ function displayTracks(tracks) {
 
 // Play Track + Show Lyrics + Add to Playlist Button
 async function playTrack(trackId, trackName, artistName) {
-  // Save current track to localStorage for persistence
   localStorage.setItem("currentTrack", trackId);
 
-  const player = `
-    <iframe style="border-radius:12px" 
-      src="https://open.spotify.com/embed/track/${trackId}" 
-      width="300" height="80" frameborder="0" 
-      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+  document.getElementById("player").innerHTML = `
+    <iframe style="border-radius:12px"
+      src="https://open.spotify.com/embed/track/${trackId}"
+      width="300" height="80" frameborder="0"
+      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
       loading="lazy"></iframe>
     <button onclick="addToPlaylist('${trackName} - ${artistName}')">Add to Playlist</button>
   `;
-  document.getElementById("player").innerHTML = player;
 
-  // Fetch lyrics from Lyrics.ovh
+  // Fetch lyrics
   try {
     const res = await fetch(`https://api.lyrics.ovh/v1/${artistName}/${trackName}`);
     const data = await res.json();
-    document.getElementById("lyrics").innerHTML = `<pre>${data.lyrics || "Lyrics not available"}</pre>`;
+    document.getElementById("lyrics").innerHTML =
+      `<pre>${data.lyrics || "Lyrics not available"}</pre>`;
   } catch {
     document.getElementById("lyrics").innerHTML = "<p>Lyrics not available</p>";
   }
@@ -95,7 +107,7 @@ function addToPlaylist(song) {
 
 // Search Button
 document.getElementById("searchBtn").addEventListener("click", async () => {
-  const query = document.getElementById("search").value;
+  const query = document.getElementById("search").value.trim();
   if (!query) {
     document.getElementById("error").textContent = "Please enter a search term.";
     return;
@@ -112,7 +124,7 @@ window.onload = () => {
   const currentTrack = localStorage.getItem("currentTrack");
   if (currentTrack) {
     document.getElementById("player").innerHTML = `
-      <iframe src="https://open.spotify.com/embed/track/${currentTrack}" 
+      <iframe src="https://open.spotify.com/embed/track/${currentTrack}"
         width="300" height="80" frameborder="0" allow="encrypted-media"></iframe>`;
   }
 };
