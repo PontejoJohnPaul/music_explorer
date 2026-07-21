@@ -68,6 +68,7 @@ async function searchTrack(query) {
 
     displayTracks(data.tracks.items);
     saveHistory(searchQuery);
+    saveLastSearch(query, artist, year, data.tracks.items);
     document.getElementById("error").textContent = "";
 
   } catch (error) {
@@ -177,8 +178,6 @@ function displayTracks(tracks) {
 
 // Play Track + Show Lyrics + Add to Playlist Button
 async function playTrack(trackId, trackName, artistName) {
-  localStorage.setItem("currentTrack", trackId);
-
   document.getElementById("player").innerHTML = `
     <iframe style="border-radius:12px"
       src="https://open.spotify.com/embed/track/${trackId}"
@@ -206,6 +205,26 @@ function saveHistory(query) {
   localStorage.setItem("history", JSON.stringify(history));
 }
 
+// Save last search (fields + results) para pag-refresh, andun pa rin
+function saveLastSearch(query, artist, year, tracks) {
+  const lastSearch = { query, artist, year, tracks };
+  localStorage.setItem("lastSearch", JSON.stringify(lastSearch));
+}
+
+// Restore last search results pagka-load ng page
+function restoreLastSearch() {
+  const saved = JSON.parse(localStorage.getItem("lastSearch"));
+  if (!saved) return;
+
+  if (saved.query) document.getElementById("search").value = saved.query;
+  if (saved.artist) document.getElementById("artist").value = saved.artist;
+  if (saved.year) document.getElementById("year").value = saved.year;
+
+  if (saved.tracks && saved.tracks.length) {
+    displayTracks(saved.tracks);
+  }
+}
+
 // Add to Playlist
 function addToPlaylist(song) {
   let playlist = JSON.parse(localStorage.getItem("playlist")) || [];
@@ -218,14 +237,9 @@ function addToPlaylist(song) {
 // Init
 getToken();
 
-// Load persistent track if exists
+// Load last search results lang pag nag-reload ang page (di na kasama ang player)
 window.onload = () => {
-  const currentTrack = localStorage.getItem("currentTrack");
-  if (currentTrack) {
-    document.getElementById("player").innerHTML = `
-      <iframe src="https://open.spotify.com/embed/track/${currentTrack}"
-        width="300" height="80" frameborder="0" allow="encrypted-media"></iframe>`;
-  }
+  restoreLastSearch();
 };
 
 
