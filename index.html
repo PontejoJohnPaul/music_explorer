@@ -14,9 +14,33 @@
     </nav>
   </header>
 
-  <input type="text" id="search" placeholder="Enter song or artist">
-  <button id="searchBtn">Search</button>
-  <p id="error"></p>
+ <div class="search-section">
+    <input type="text" id="search" placeholder="Enter song">
+
+    <div class="artist-container">
+        <input type="text" id="artist" placeholder="Artist (Optional)">
+        <div id="artistSuggestions" class="suggestions"></div>
+    </div>
+    <select id="year">
+        <option value="">All Years</option>
+        <option value="2026">2026</option>
+        <option value="2025">2025</option>
+        <option value="2024">2024</option>
+        <option value="2023">2023</option>
+        <option value="2022">2022</option>
+        <option value="2021">2021</option>
+        <option value="2020">2020</option>
+        <option value="2019">2019</option>
+        <option value="2018">2018</option>
+        <option value="2017">2017</option>
+        <option value="2016">2016</option>
+        <option value="2015">2015</option>
+    </select>
+
+    <button id="searchBtn">Search</button>
+</div>
+
+<p id="error"></p>
 
   <div id="results"></div>
   <div id="lyrics"></div>

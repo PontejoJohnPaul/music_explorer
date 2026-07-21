@@ -25,24 +25,133 @@ async function getToken() {
   }
 }
 
+
 // Search Track
 async function searchTrack(query) {
+  const artist = document.getElementById("artist").value.trim();
+  const year = document.getElementById("year").value;
+
+  let searchQuery = "";
+
+  if (query) {
+    searchQuery += query;
+  }
+
+  if (artist) {
+    searchQuery += `${searchQuery ? " " : ""}artist:"${artist}"`;
+  }
+
+  if (year) {
+    searchQuery += `${searchQuery ? " " : ""}year:${year}`;
+  }
+
+  
+  if (!searchQuery) {
+    document.getElementById("error").textContent =
+      "Please enter a song, artist, or year.";
+    return;
+  }
+
   try {
     const response = await fetch(
-      `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=5`,
-      { headers: { Authorization: `Bearer ${accessToken}` } }
+      `https://api.spotify.com/v1/search?q=${encodeURIComponent(searchQuery)}&type=track&limit=5`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      }
     );
 
     if (!response.ok) throw new Error("Failed to fetch tracks");
 
     const data = await response.json();
+
     displayTracks(data.tracks.items);
-    saveHistory(query);
+    saveHistory(searchQuery);
+    document.getElementById("error").textContent = "";
+
   } catch (error) {
     console.error("Search Error:", error);
     document.getElementById("error").textContent = "Error fetching tracks!";
   }
 }
+
+
+// Search Artist Suggestions
+async function searchArtists(keyword) {
+
+  if (keyword.length < 2) {
+    document.getElementById("artistSuggestions").innerHTML = "";
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `https://api.spotify.com/v1/search?q=${encodeURIComponent(keyword)}&type=artist&limit=5`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      }
+    );
+
+    const data = await response.json();
+    displayArtistSuggestions(data.artists.items);
+
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+//display artist suggestions
+function displayArtistSuggestions(artists) {
+
+  const list = document.getElementById("artistSuggestions");
+
+  list.innerHTML = "";
+
+  artists.forEach(artist => {
+
+    const item = document.createElement("div");
+
+    item.className = "suggestion-item";
+
+    item.textContent = artist.name;
+
+    item.onclick = () => {
+      document.getElementById("artist").value = artist.name;
+      list.innerHTML = "";
+    };
+
+    list.appendChild(item);
+
+  });
+
+}
+
+
+// Search Button
+document.getElementById("searchBtn").addEventListener("click", async () => {
+  const query = document.getElementById("search").value.trim();
+  const artist = document.getElementById("artist").value.trim();
+  const year = document.getElementById("year").value;
+
+  // At least one field must be filled
+  if (!query && !artist && !year) {
+    document.getElementById("error").textContent =
+      "Please enter a song, artist, or release year.";
+    return;
+  }
+
+  document.getElementById("error").textContent = "";
+  await searchTrack(query);
+});
+
+
+
+
+
+
 
 // Display Tracks
 function displayTracks(tracks) {
@@ -105,16 +214,6 @@ function addToPlaylist(song) {
   alert(`${song} added to playlist!`);
 }
 
-// Search Button
-document.getElementById("searchBtn").addEventListener("click", async () => {
-  const query = document.getElementById("search").value.trim();
-  if (!query) {
-    document.getElementById("error").textContent = "Please enter a search term.";
-    return;
-  }
-  document.getElementById("error").textContent = "";
-  await searchTrack(query);
-});
 
 // Init
 getToken();
@@ -128,3 +227,8 @@ window.onload = () => {
         width="300" height="80" frameborder="0" allow="encrypted-media"></iframe>`;
   }
 };
+
+
+document.getElementById("artist").addEventListener("input", (e) => {
+  searchArtists(e.target.value);
+});
