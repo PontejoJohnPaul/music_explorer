@@ -45,7 +45,7 @@ async function searchTrack(query) {
     searchQuery += `${searchQuery ? " " : ""}year:${year}`;
   }
 
-  
+
   if (!searchQuery) {
     document.getElementById("error").textContent =
       "Please enter a song, artist, or year.";
@@ -68,7 +68,6 @@ async function searchTrack(query) {
 
     displayTracks(data.tracks.items);
     saveHistory(searchQuery);
-    saveLastSearch(query, artist, year, data.tracks.items);
     document.getElementById("error").textContent = "";
 
   } catch (error) {
@@ -104,7 +103,7 @@ async function searchArtists(keyword) {
   }
 }
 
-//display artist suggestions
+// Display artist suggestions
 function displayArtistSuggestions(artists) {
 
   const list = document.getElementById("artistSuggestions");
@@ -147,11 +146,6 @@ document.getElementById("searchBtn").addEventListener("click", async () => {
   document.getElementById("error").textContent = "";
   await searchTrack(query);
 });
-
-
-
-
-
 
 
 // Display Tracks
@@ -198,31 +192,11 @@ async function playTrack(trackId, trackName, artistName) {
   }
 }
 
-// Save history in localStorage
+// Save search history in localStorage (used by history.html only)
 function saveHistory(query) {
   let history = JSON.parse(localStorage.getItem("history")) || [];
   history.push(query);
   localStorage.setItem("history", JSON.stringify(history));
-}
-
-// Save last search (fields + results) para pag-refresh, andun pa rin
-function saveLastSearch(query, artist, year, tracks) {
-  const lastSearch = { query, artist, year, tracks };
-  localStorage.setItem("lastSearch", JSON.stringify(lastSearch));
-}
-
-// Restore last search results pagka-load ng page
-function restoreLastSearch() {
-  const saved = JSON.parse(localStorage.getItem("lastSearch"));
-  if (!saved) return;
-
-  if (saved.query) document.getElementById("search").value = saved.query;
-  if (saved.artist) document.getElementById("artist").value = saved.artist;
-  if (saved.year) document.getElementById("year").value = saved.year;
-
-  if (saved.tracks && saved.tracks.length) {
-    displayTracks(saved.tracks);
-  }
 }
 
 // Add to Playlist
@@ -237,11 +211,8 @@ function addToPlaylist(song) {
 // Init
 getToken();
 
-// Load last search results lang pag nag-reload ang page (di na kasama ang player)
-window.onload = () => {
-  restoreLastSearch();
-};
-
+// Note: search results and the player are intentionally NOT restored on
+// page load/refresh. Everything resets to a blank state, as intended.
 
 document.getElementById("artist").addEventListener("input", (e) => {
   searchArtists(e.target.value);
