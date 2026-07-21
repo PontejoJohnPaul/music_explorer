@@ -3,39 +3,71 @@ const clientSecret = "7a631abba6eb49cfa74a13596287d5e6";
 
 let accessToken = "";
 
-// Get Spotify Token
 async function getToken() {
   try {
     const result = await fetch("https://accounts.spotify.com/api/token", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        "Authorization": "Basic " + btoa(`${clientId}:${clientSecret}`)
+        Authorization: "Basic " + btoa(`${clientId}:${clientSecret}`)
       },
       body: "grant_type=client_credentials"
     });
 
-    if (!result.ok) throw new Error("Failed to get token");
+    if (!result.ok) {
+      const text = await result.text();
+      throw new Error(`Failed to get token: ${result.status} ${text}`);
+    }
 
     const data = await result.json();
+    if (!data.access_token) {
+      throw new Error("Spotify returned no access token");
+    }
+
     accessToken = data.access_token;
   } catch (error) {
     console.error("Token Error:", error);
-    document.getElementById("error").textContent = "Error fetching Spotify token!";
+    document.getElementById("error").textContent = error.message;
+  }
+}
+
+async function spotifyFetch(path, options = {}) {
+  if (!accessToken) {
+    await getToken();
+  }
+
+  if (!accessToken) {
+    throw new Error("No Spotify access token available");
+  }
+
+  const response = await fetch(`https://api.spotify.com${path}`, {
+    ...options,
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      ...(options.headers || {})
+    }
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Spotify request failed with status ${response.status}: ${text}`);
+  }
+
+  return response.json();
+}
+
+function toggleArtistsSection(show) {
+  const section = document.getElementById("topArtists");
+  if (section) {
+    section.style.display = show ? "block" : "none";
   }
 }
 
 // Search Track
 async function searchTrack(query) {
   try {
-    const response = await fetch(
-      `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=5`,
-      { headers: { Authorization: `Bearer ${accessToken}` } }
-    );
-
-    if (!response.ok) throw new Error("Failed to fetch tracks");
-
-    const data = await response.json();
+    const data = await spotifyFetch(`/v1/search?q=${encodeURIComponent(query)}&type=track&limit=5`);
+    toggleArtistsSection(false);
     displayTracks(data.tracks.items);
     saveHistory(query);
   } catch (error) {
@@ -105,6 +137,37 @@ function addToPlaylist(song) {
   alert(`${song} added to playlist!`);
 }
 
+// ================== ARTIST SUGGESTIONS ==================
+
+// Suggested Artists
+async function loadTopArtists() {
+  const container = document.getElementById("artistsList");
+  container.innerHTML = "";
+
+  const genres = ["pop", "opm", "hiphop"];
+
+  for (const genre of genres) {
+    try {
+      const data = await spotifyFetch(`/v1/search?q=genre:${genre}&type=artist&limit=3`);
+      (data.artists?.items || []).forEach(artist => {
+        const div = document.createElement("div");
+        div.className = "track";
+        div.innerHTML = `
+          <h3 onclick="loadArtistTracks('${artist.id}', '${artist.name}')">${artist.name}</h3>
+          <img src="${artist.images[0]?.url || ''}" alt="Artist" onclick="loadArtistTracks('${artist.id}', '${artist.name}')">
+        `;
+        container.appendChild(div);
+      });
+    } catch (error) {
+      console.error("Artist Suggestion Error:", error);
+      container.innerHTML += `<p>${error.message}</p>`;
+    }
+  }
+}
+
+
+
+
 // Search Button
 document.getElementById("searchBtn").addEventListener("click", async () => {
   const query = document.getElementById("search").value.trim();
@@ -116,8 +179,30 @@ document.getElementById("searchBtn").addEventListener("click", async () => {
   await searchTrack(query);
 });
 
+document.getElementById("search").addEventListener("keydown", async (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    const query = document.getElementById("search").value.trim();
+    if (!query) {
+      document.getElementById("error").textContent = "Please enter a search term.";
+      return;
+    }
+    document.getElementById("error").textContent = "";
+    await searchTrack(query);
+  }
+});
+
+// Show artist suggestions again when the page is reloaded or the search box is cleared
+window.addEventListener("DOMContentLoaded", () => {
+  toggleArtistsSection(true);
+});
+
+
 // Init
-getToken();
+(async () => {
+  await getToken();
+  await loadTopArtists();
+})();
 
 // Load persistent track if exists
 window.onload = () => {
